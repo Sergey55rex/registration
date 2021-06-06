@@ -18,6 +18,7 @@ import com.bumptech.glide.request.target.Target
 import com.google.android.material.snackbar.Snackbar
 import ru.netology.nmedia.BuildConfig
 import ru.netology.nmedia.R
+import ru.netology.nmedia.activity.NewPostFragment.Companion.textArg
 import ru.netology.nmedia.adapter.OnInteractionListener
 import ru.netology.nmedia.adapter.PostsAdapter
 import ru.netology.nmedia.databinding.FragmentFeedBinding
@@ -27,10 +28,7 @@ import ru.netology.nmedia.viewmodel.PostViewModel
 
 
 class FeedFragment : Fragment() {
-
     private val viewModel: PostViewModel by viewModels(ownerProducer = ::requireParentFragment)
-
-
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -54,8 +52,6 @@ class FeedFragment : Fragment() {
 
             override fun onEdit(post: Post) {
                 viewModel.edit(post)
-
-
             }
 
             override fun onLike(post: Post) {
@@ -79,9 +75,6 @@ class FeedFragment : Fragment() {
             }
         })
 
-
-        binding.cancellation.isGone = true
-        
         binding.list.adapter = adapter
 
 
@@ -101,42 +94,16 @@ class FeedFragment : Fragment() {
             binding.emptyText.isVisible = state.empty
         }
 
-
-        viewModel.edited.observe( viewLifecycleOwner) { post ->
-            if (post.id == 0L){
+        viewModel.edited.observe(viewLifecycleOwner, { post ->
+            if (post.id == 0L) {
                 return@observe
             }
-
-            with(binding.content){
-                binding.cancellation.isGone = false
-                requestFocus()
-                setText(post.content)
+            val text: String = post.content
+            val bundle = Bundle().apply {
+                textArg = text
             }
-
-
-        }
-
-        binding.save.setOnClickListener {
-            with(binding.content) {
-                if (text.isNullOrBlank()) {
-                    Toast.makeText(
-                        context,
-                        context.getString(R.string.error_empty_content),
-                        Toast.LENGTH_SHORT
-                    ).show()
-                    return@setOnClickListener
-                }
-
-                viewModel.changeContent(text.toString())
-                viewModel.save()
-                binding.cancellation.isGone = true
-                setText("")
-                clearFocus()
-                AndroidUtils.hideKeyboard(this)
-            }
-        }
-
-
+            findNavController().navigate(R.id.action_feedFragment_to_redactorFragment, bundle)
+        })
 
         viewModel.newerCount.observe(viewLifecycleOwner) { state ->
             Snackbar.make(binding.root, R.string.fresh_records, Snackbar.LENGTH_INDEFINITE)
@@ -156,7 +123,4 @@ class FeedFragment : Fragment() {
 
         return binding.root
     }
-
-
-
 }
